@@ -1,0 +1,32 @@
+my-watchparty-app/
+├── node_modules/
+├── public/
+├── src/
+│   ├── abi/
+│   │   └── ScrollChill.json           // ABI file for the smart contract
+│   ├── assets/
+│   │   └── logo.svg                   // Any static assets like logos, images
+│   ├── components/
+│   │   ├── WatchPartyForm.jsx         // Component for creating watch parties
+│   │   ├── PartyList.jsx              // Component for displaying the list of parties
+│   │   ├── PartyDetails.jsx           // Component for individual party details (voting)
+│   │   ├── VoteForm.jsx               // Voting form component
+│   │   ├── ClosePartyButton.jsx       // Component to close the party and display results
+│   │   └── Header.jsx                 // Navbar/Header component
+│   ├── context/
+│   │   └── Web3Context.jsx            // Context to handle Web3 connections and provider
+│   ├── hooks/
+│   │   └── useContract.jsx            // Custom hook to interact with the ScrollChill contract
+│   ├── pages/
+│   │   ├── Home.jsx                   // Home page showing all watch parties
+│   │   ├── CreateParty.jsx            // Page for creating a new watch party
+│   │   ├── PartyDetailsPage.jsx       // Page for individual party details and voting
+│   └── styles/
+│       └── app.css                    // Global CSS or TailwindCSS
+│   ├── App.jsx                        // Main React component
+│   ├── main.jsx                       // Vite's entry file
+│   └── config.js                      // Config file for storing contract address and network details
+├── .env                               // Environment variables (e.g., Infura/Alchemy API keys)
+├── index.html                         // Main HTML file
+├── package.json                       // Dependencies and scripts
+└── vite.config.js                     // Vite configuration
