@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract ScrollChill is ERC721 {
+contract NetBase is ERC721 {
     address public owner;
     IERC20 public rewardToken;
 
@@ -30,7 +30,6 @@ contract ScrollChill is ERC721 {
         bool partyClosed;
         string winningMovie;
         string[] movieOptions;
-
     }
 
     mapping(uint256 => WatchParty) private watchParties; 

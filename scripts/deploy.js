@@ -5,18 +5,18 @@ async function main() {
   const [deployer] = await ethers.getSigners();
   console.log("Deploying contracts with the account:", deployer.address);
 
-  const rewardTokenAddress = process.env.REWARD_TOKEN_ADDRESS;
-  if (!rewardTokenAddress) {
-    throw new Error("Please set the REWARD_TOKEN_ADDRESS in your .env file");
-  }
+  const initialSupply = ethers.utils.parseUnits("1000000", 18);
 
-  console.log("Using rewardToken address from .env:", rewardTokenAddress);
+  const RewardToken = await ethers.getContractFactory("RewardToken");
+  const rewardToken = await RewardToken.deploy(initialSupply);
+  await rewardToken.deployed();
+  console.log("RewardToken deployed to:", rewardToken.address);
 
-  const ScrollChillNFT = await ethers.getContractFactory("ScrollChill");
-  const scrollChillNFT = await ScrollChillNFT.deploy(rewardTokenAddress);
-  await scrollChillNFT.deployed();
+  const NetBase = await ethers.getContractFactory("NetBase");
+  const netBase = await NetBase.deploy(rewardToken.address);
+  await netBase.deployed();
 
-  console.log("ScrollChillNFT deployed to:", scrollChillNFT.address);
+  console.log("NetBase deployed to:", netBase.address);
 }
 
 main()
