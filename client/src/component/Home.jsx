@@ -1,61 +1,25 @@
-import { useState } from "react";
-import { ethers } from "ethers";
-import ScrollChillNFT from "../util/ABIs/SCHILL.json";
+import React from "react";
 
-const WalletConnect = () => {
-  const [account, setAccount] = useState("");
-  const [contract, setContract] = useState(null);
-  const [count, setCount] = useState(0);
-
-  const contractAddress = ScrollChillNFT.address;
-
-  const connectWallet = async () => {
-    if (window.ethereum) {
-      try {
-        console.log("Connecting to wallet...");
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const signer = provider.getSigner();
-
-        console.log("Requesting accounts...");
-        const accounts = await window.ethereum.request({
-          method: "eth_requestAccounts",
-        });
-        console.log("Accounts received:", accounts);
-
-        setAccount(accounts[0]);
-
-        const contract = new ethers.Contract(
-          contractAddress,
-          ScrollChillNFT.abi,
-          signer
-        );
-        setContract(contract);
-        console.log("Wallet connected:", accounts[0]);
-      } catch (error) {
-        console.error("Error connecting to wallet:", error);
-        alert("Failed to connect wallet");
-      }
-    } else {
-      alert("Install MetaMask to interact with the app");
-    }
-  };
-
+const Home = () => {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <button
-        className="px-4 py-2 bg-blue-500 text-white rounded"
-        onClick={connectWallet}
-      >
-        {account
-          ? `Connected: ${account.substring(0, 6)}...${account.substring(
-              account.length - 4
-            )}`
-          : "Connect Wallet"}
-      </button>
-
-      {account && <div className="mt-8"></div>}
+    <div className="bg-gradient-to-b from-blue-900 to-black text-white min-h-[92vh] flex flex-col justify-center items-center">
+      <section className="text-center p-8">
+        <h1 className="text-4xl md:text-6xl font-bold mb-4 animate-float">
+          Welcome to <span className="text-blue-500">Net Base</span>
+        </h1>
+        <p className="text-lg md:text-2xl mb-6 ">
+          Join the ultimate decentralized watch party experience on Base
+          network. <br />
+          Create, watch, and vote for your preferred movies in a watch party!
+        </p>
+        <div className="mt-8">
+          <p className=" text-white py-3 px-6 rounded-full text-lg md:text-xl">
+            Connect Your Wallet And Start Watching!
+          </p>
+        </div>
+      </section>
     </div>
   );
 };
 
-export default WalletConnect;
+export default Home;

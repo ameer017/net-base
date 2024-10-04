@@ -1,5 +1,5 @@
 {
-  "address": "0x5362d3E9A59aE8265590871D5E5cCcb1475d99C8",
+  "address": "0x316c2701057d67B17b32af82C069AAf4701fE2F3",
   "abi": [
     {
       "inputs": [
@@ -451,7 +451,7 @@
               "type": "string[]"
             }
           ],
-          "internalType": "struct ScrollChill.WatchPartyView[]",
+          "internalType": "struct NetBase.WatchPartyView[]",
           "name": "",
           "type": "tuple[]"
         }

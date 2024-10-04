@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect } from "react";
 import { ethers } from "ethers";
-import ScrollChillABI from "../util/ABIs/SCHILL.json";
+import NETBASE from "../util/ABIs/NETBASE.json";
 
 export const Web3Context = createContext();
 
@@ -9,7 +9,7 @@ export const Web3Provider = ({ children }) => {
   const [signer, setSigner] = useState(null);
   const [contract, setContract] = useState(null);
   const [account, setAccount] = useState(null);
-  const [error, setError] = useState(null); // For error handling
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const setupWeb3 = async () => {
@@ -29,8 +29,8 @@ export const Web3Provider = ({ children }) => {
         setAccount(accounts[0]);
 
         const contractInstance = new ethers.Contract(
-          ScrollChillABI.address,
-          ScrollChillABI.abi,
+          NETBASE.address,
+          NETBASE.abi,
           signer
         );
         setContract(contractInstance);

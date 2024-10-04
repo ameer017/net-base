@@ -1,40 +1,75 @@
-import React, { useContext } from "react";
-import { Web3Context } from "../context/Web3Context";
+import { useState } from "react";
+import { ethers } from "ethers";
+import NETBASE from "../util/ABIs/NETBASE.json";
+import { Link } from "react-router-dom";
 
 const Header = () => {
-  const { account } = useContext(Web3Context);
+  const [connected, setConnected] = useState(false);
+  const [account, setAccount] = useState("");
+  const [contract, setContract] = useState(null);
+
+  const contractAddress = NETBASE.address;
+
+  const connectWallet = async () => {
+    if (window.ethereum) {
+      try {
+        console.log("Connecting to wallet...");
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+
+        console.log("Requesting accounts...");
+        const accounts = await window.ethereum.request({
+          method: "eth_requestAccounts",
+        });
+        console.log("Accounts received:", accounts);
+
+        setAccount(accounts[0]);
+
+        const contract = new ethers.Contract(
+          contractAddress,
+          NETBASE.abi,
+          signer
+        );
+        setContract(contract);
+        setConnected(true);
+        console.log("Wallet connected:", accounts[0]);
+      } catch (error) {
+        console.error("Error connecting to wallet:", error);
+        alert("Failed to connect wallet");
+      }
+    } else {
+      alert("Install MetaMask to interact with the app");
+    }
+  };
 
   return (
     <header className="bg-blue-600 p-4 flex justify-between items-center text-white">
-      <h1 className="text-xl font-bold">Scroll Chill</h1>
+      <Link to="/" className="text-xl font-bold">
+        Net Base
+      </Link>
       <nav>
-        <ul className="flex space-x-4">
-          <li>
-            <a href="/" className="hover:underline">
-              Home
-            </a>
-          </li>
-          <li>
-            <a href="/create" className="hover:underline">
-              Create Watch Party
-            </a>
-          </li>
-          <li>
-            <a href="/party-list" className="hover:underline">
-              PartyList
-            </a>
-          </li>
-        </ul>
+        {connected && account && (
+          <ul className="flex space-x-4">
+            <li>
+              <Link to="/create" className="hover:underline">
+                Create Watch Party
+              </Link>
+            </li>
+            <li>
+              <Link to="/party-list" className="hover:underline">
+                PartyList
+              </Link>
+            </li>
+          </ul>
+        )}
       </nav>
       <div>
-        {account ? (
-          <span className="text-sm">
-            Connected: {account.substring(0, 6)}...
-            {account.substring(account.length - 4)}
-          </span>
-        ) : (
-          <span className="text-sm">Not connected</span>
-        )}
+        <button
+          className="px-4 py-2 bg-white text-blue-600 rounded"
+          onClick={connectWallet}
+        >
+          {account && connected ? `Connected` : "Connect Wallet"}
+        </button>
       </div>
     </header>
   );
