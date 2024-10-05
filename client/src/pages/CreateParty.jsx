@@ -68,7 +68,10 @@ const CreateParty = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <h1 className="text-2xl font-bold mb-6">Create a Watch Party</h1>
+      <h1 className="text-2xl font-bold mb-6">
+            Create a Watch Party
+      </h1>
+      
       <form className="w-full max-w-lg" onSubmit={createParty}>
         <input
           className="w-full mb-4 p-2 border border-gray-300 rounded"
@@ -98,7 +101,7 @@ const CreateParty = () => {
           disabled={loading}
         />
         <button
-          className="px-4 py-2 bg-blue-500 text-white rounded"
+          className="px-4 py-2 bg-blue-500 text-white rounded w-full"
           type="submit"
           disabled={loading}
         >
@@ -106,7 +109,6 @@ const CreateParty = () => {
         </button>
       </form>
       {error && <p className="text-red-500 mt-4">{error}</p>}{" "}
-      {partyId && <p>Party Created! ID: {partyId}</p>}
     </div>
   );
 };
