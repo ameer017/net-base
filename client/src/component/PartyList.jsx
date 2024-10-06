@@ -42,7 +42,7 @@ const PartyList = () => {
 
   const formatHost = (host) => {
     if (host.length > 20) {
-      return `${host.slice(0, 4)}...${host.slice(-4)}`;
+      return `${host.slice(0, 6)}...${host.slice(-4)}`;
     }
     return host;
   };
