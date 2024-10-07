@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from "react";
 import { useParams } from "react-router-dom";
 import { Web3Context } from "../context/Web3Context";
+import { toast } from "react-toastify";
 
 const PartyDetails = () => {
   const { id } = useParams();
@@ -66,7 +67,7 @@ const PartyDetails = () => {
     try {
       const transaction = await contract.voteForMovie(party.id, movieToVote);
       await transaction.wait();
-      alert("Vote cast successfully!");
+      toast.success("Vote cast successfully!");
 
       const updatedParty = await contract.getPartyDetails(party.id);
       const formattedUpdatedParty = {
@@ -84,7 +85,7 @@ const PartyDetails = () => {
       setMovieToVote("");
     } catch (error) {
       console.error("Error voting for movie:", error);
-      alert("Failed to cast vote. Please try again.");
+      toast.error("Failed to cast vote. Please try again.");
     } finally {
       setLoadingVote(false);
     }
@@ -97,10 +98,10 @@ const PartyDetails = () => {
     try {
       const transaction = await contract.closeWatchParty(party.id);
       await transaction.wait();
-      alert("Party closed successfully!");
+      toast.success("Party closed successfully!");
     } catch (error) {
       console.error("Error closing party:", error);
-      alert("Failed to close party. Please try again.");
+      toast.error("Failed to close party. Please try again.");
     } finally {
       setLoadingClose(false);
     }
@@ -117,7 +118,7 @@ const PartyDetails = () => {
       setVoteCount(result[1].toNumber());
     } catch (error) {
       console.error("Error checking votes:", error);
-      alert("Failed to check votes. Please try again.");
+      toast.error("Failed to check votes. Please try again.");
     } finally {
       setLoadingCheckVotes(false);
     }
@@ -130,10 +131,10 @@ const PartyDetails = () => {
     try {
       const transaction = await contract.mintNFTForParty(account);
       await transaction.wait();
-      alert("NFT minted successfully!");
+      toast.success("NFT minted successfully!");
     } catch (error) {
       console.error("Error minting NFT:", error);
-      alert("Failed to mint NFT. Please try again.");
+      toast.error("Failed to mint NFT. Please try again.");
     } finally {
       setLoadingMintNFT(false);
     }
@@ -150,10 +151,10 @@ const PartyDetails = () => {
         rewardAmount
       );
       await transaction.wait();
-      alert("Rewards distributed successfully!");
+      toast.success("Rewards distributed successfully!");
     } catch (error) {
       console.error("Error distributing rewards:", error);
-      alert("Failed to distribute rewards. Please try again.");
+      toast.error("Failed to distribute rewards. Please try again.");
     } finally {
       setLoadingDistributeRewards(false);
     }
@@ -178,6 +179,7 @@ const PartyDetails = () => {
       <p className="text-gray-500">
         Party Time: {new Date(party.partyTime * 1000).toLocaleString()}
       </p>
+
       <p
         className={`font-bold ${
           party.active ? "text-green-500" : "text-red-500"
@@ -185,6 +187,7 @@ const PartyDetails = () => {
       >
         Status: {party.active ? "Active" : "Closed"}
       </p>
+
       {party.winningMovie && (
         <p className="text-gray-500">Winning Movie: {party.winningMovie}</p>
       )}
@@ -236,6 +239,7 @@ const PartyDetails = () => {
           </button>
         </div>
       )}
+
       {party.partyClosed && (
         <div className="mt-4">
           <button
@@ -252,6 +256,36 @@ const PartyDetails = () => {
               Winning Movie: {winningMovie} with {voteCount} votes
             </p>
           )}
+        </div>
+      )}
+
+      {party.partyClosed && (
+        <div className="mt-4">
+          <button
+            onClick={handleMintNFT}
+            disabled={loadingMintNFT}
+            className={`p-2 rounded bg-pink-500 text-white ${
+              loadingMintNFT ? "opacity-50" : ""
+            }`}
+          >
+            {loadingMintNFT ? "Minting..." : "Mint NFT"}
+          </button>
+        </div>
+      )}
+
+      {party.partyClosed && (
+        <div className="mt-4">
+          <button
+            onClick={handleDistributeRewards}
+            disabled={loadingDistributeRewards}
+            className={`p-2 rounded bg-pink-500 text-white ${
+              loadingDistributeRewards ? "opacity-50" : ""
+            }`}
+          >
+            {loadingDistributeRewards
+              ? "Distributing..."
+              : "Distribute Rewards"}
+          </button>
         </div>
       )}
     </div>

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useContract } from "../util/useContract";
+import { toast } from "react-toastify";
 
 const WatchPartyForm = () => {
   const contract = useContract();
@@ -15,10 +16,10 @@ const WatchPartyForm = () => {
         movieOptions
       );
       await tx.wait();
-      alert("Watch Party Created!");
+      ("Watch Party Created!");
     } catch (error) {
       console.error(error);
-      alert("Failed to create watch party");
+      toast.error("Failed to create watch party");
     }
   };
 

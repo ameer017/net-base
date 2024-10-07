@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ethers } from "ethers";
 import NETBASE from "../util/ABIs/NETBASE.json";
 import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const Header = () => {
   const [connected, setConnected] = useState(false);
@@ -35,10 +36,10 @@ const Header = () => {
         console.log("Wallet connected:", accounts[0]);
       } catch (error) {
         console.error("Error connecting to wallet:", error);
-        alert("Failed to connect wallet");
+        toast.error("Failed to connect wallet");
       }
     } else {
-      alert("Install MetaMask to interact with the app");
+      toast.warn("Install MetaMask to interact with the app");
     }
   };
 
