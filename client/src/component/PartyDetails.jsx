@@ -17,8 +17,10 @@ const PartyDetails = () => {
   const [voteCount, setVoteCount] = useState(0);
   const [loadingCheckVotes, setLoadingCheckVotes] = useState(false);
   const [loadingMintNFT, setLoadingMintNFT] = useState(false);
-  const [loadingDistributeRewards, setLoadingDistributeRewards] =
-    useState(false);
+  const [rewardAmount, setRewardAmount] = useState("");
+  const [loadingDistributeRewards, setLoadingDistributeRewards] = useState(false);
+  
+  const [voterAddress, setVoterAddress] = useState("");
 
   useEffect(() => {
     const fetchPartyDetails = async () => {
@@ -46,6 +48,7 @@ const PartyDetails = () => {
 
           setParty(formattedParty);
           setIsHost(partyData.host.toLowerCase() === account.toLowerCase());
+          console.log(formattedParty.votes);
         } else {
           setError("Party not found.");
         }
@@ -60,6 +63,8 @@ const PartyDetails = () => {
     fetchPartyDetails();
   }, [contract, id, account]);
 
+  let allAddresses = [];
+
   const handleVote = async () => {
     if (!contract || !movieToVote) return;
 
@@ -69,7 +74,29 @@ const PartyDetails = () => {
       await transaction.wait();
       toast.success("Vote cast successfully!");
 
-      const updatedParty = await contract.getPartyDetails(party.id);
+      contract.on("VoteCasted", (voter, partyId, movie) => {
+        if (partyId.toNumber() === parseInt(id)) {
+          console.log(`Voter Address: ${voter}, Movie Voted: ${movie}`);
+
+          allAddresses.push({
+            voterAddress: voter,
+            movieTitle: movie,
+          });
+
+          setParty((prevParty) => ({
+            ...prevParty,
+            votes: allAddresses,
+          }));
+        }
+      });
+
+      const partiesList = await contract.getAllParties();
+      const updatedParty = partiesList.find(
+        (party) => party.id.toNumber() === parseInt(id)
+      );
+
+      console.log(updatedParty);
+
       const formattedUpdatedParty = {
         id: updatedParty.id.toNumber(),
         title: updatedParty.title,
@@ -79,8 +106,9 @@ const PartyDetails = () => {
         partyClosed: updatedParty.partyClosed,
         winningMovie: updatedParty.winningMovie,
         movieOptions: updatedParty.movieOptions,
-        votes: updatedParty.votes,
+        votes: allAddresses, // Add all the voter addresses to the party's votes array
       };
+
       setParty(formattedUpdatedParty);
       setMovieToVote("");
     } catch (error) {
@@ -140,17 +168,26 @@ const PartyDetails = () => {
     }
   };
 
-  const handleDistributeRewards = async (participants, rewardAmount) => {
-    if (!contract) return;
-
+  const handleDistributeRewards = async () => {
+    if (!contract || !rewardAmount || isNaN(rewardAmount)) return;
+  
     setLoadingDistributeRewards(true);
     try {
-      const transaction = await contract.distributeRewards(
-        party.host,
-        participants,
-        rewardAmount
+      const votersToReward = party.votes.filter(
+        (vote) => vote.movieTitle === party.winningMovie
       );
-      await transaction.wait();
+  
+      for (let i = 0; i < votersToReward.length; i++) {
+        const voterAddress = votersToReward[i].voterAddress;
+        
+        const transaction = await contract.distributeReward(
+          voterAddress,
+          ethers.utils.parseEther(rewardAmount)
+        );
+        await transaction.wait();
+        console.log(`Reward distributed to: ${voterAddress}`);
+      }
+  
       toast.success("Rewards distributed successfully!");
     } catch (error) {
       console.error("Error distributing rewards:", error);
@@ -159,6 +196,7 @@ const PartyDetails = () => {
       setLoadingDistributeRewards(false);
     }
   };
+  
 
   if (loading) {
     return <p>Loading party details...</p>;
@@ -226,6 +264,19 @@ const PartyDetails = () => {
         </div>
       )}
 
+      {party.votes && party.votes.length > 0 && (
+        <div className="mt-4">
+          <h2 className="text-lg font-semibold">Voters:</h2>
+          <ul className="list-disc list-inside">
+            {party.votes.map((vote, index) => (
+              <li key={index}>
+                Wallet: {vote.voterAddress} voted for {vote.movieTitle}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {isHost && party.active && (
         <div className="mt-4">
           <button
@@ -259,35 +310,46 @@ const PartyDetails = () => {
         </div>
       )}
 
-      {party.partyClosed && (
-        <div className="mt-4">
-          <button
-            onClick={handleMintNFT}
-            disabled={loadingMintNFT}
-            className={`p-2 rounded bg-pink-500 text-white ${
-              loadingMintNFT ? "opacity-50" : ""
-            }`}
-          >
-            {loadingMintNFT ? "Minting..." : "Mint NFT"}
-          </button>
-        </div>
-      )}
+        {party.partyClosed && (
+          <div className="mt-4">
+            <button
+              onClick={handleMintNFT}
+              disabled={loadingMintNFT}
+              className={`p-2 rounded bg-pink-500 text-white ${
+                loadingMintNFT ? "opacity-50" : ""
+              }`}
+            >
+              {loadingMintNFT ? "Minting..." : "Mint NFT"}
+            </button>
+          </div>
+        )}
+        {party.partyClosed && (
+  <div className="mt-4">
+    <h2 className="text-lg font-semibold">Distribute Rewards</h2>
+    
+    {/* Input field for reward amount */}
+    <input
+      type="number"
+      min="0"
+      step="0.01"
+      value={rewardAmount}
+      onChange={(e) => setRewardAmount(e.target.value)}
+      placeholder="Enter reward amount"
+      className="p-2 border border-gray-300 rounded w-full mb-4"
+    />
 
-      {party.partyClosed && (
-        <div className="mt-4">
-          <button
-            onClick={handleDistributeRewards}
-            disabled={loadingDistributeRewards}
-            className={`p-2 rounded bg-pink-500 text-white ${
-              loadingDistributeRewards ? "opacity-50" : ""
-            }`}
-          >
-            {loadingDistributeRewards
-              ? "Distributing..."
-              : "Distribute Rewards"}
-          </button>
-        </div>
-      )}
+    <button
+      onClick={handleDistributeRewards}
+      disabled={loadingDistributeRewards || !rewardAmount}
+      className={`p-2 rounded bg-yellow-900 text-white ${
+        loadingDistributeRewards ? "opacity-50" : ""
+      }`}
+    >
+      {loadingDistributeRewards ? "Distributing..." : "Distribute Rewards"}
+    </button>
+  </div>
+)}
+
     </div>
   );
 };

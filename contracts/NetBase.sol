@@ -32,7 +32,9 @@ contract NetBase is ERC721 {
         string[] movieOptions;
     }
 
-    mapping(uint256 => WatchParty) private watchParties; 
+    mapping(uint256 => WatchParty) private watchParties;
+    mapping(uint256 => address[]) public movieVotes;
+
     uint256[] private partyIds;
 
     event WatchPartyCreated(
@@ -43,7 +45,7 @@ contract NetBase is ERC721 {
     );
     event VoteCast(uint256 partyId, string movieTitle, address voter);
     event WatchPartyClosed(uint256 partyId, string winningMovie);
-    event NFTMinted(address to, uint256 tokenId);
+    event VoteCasted(address indexed voter, uint256 partyId, string movie);
 
     constructor(address _rewardToken) ERC721("ScrollChillNFT", "SCNFT") {
         owner = msg.sender;
@@ -51,7 +53,7 @@ contract NetBase is ERC721 {
     }
 
     function generatePartyId() internal view returns (uint256) {
-        return partyIds.length + 1; 
+        return partyIds.length + 1;
     }
 
     function generateTokenId(
@@ -90,7 +92,7 @@ contract NetBase is ERC721 {
         newParty.partyClosed = false;
         newParty.movieOptions = _movieOptions;
 
-        partyIds.push(newPartyId); 
+        partyIds.push(newPartyId);
 
         emit WatchPartyCreated(newPartyId, msg.sender, _title, _partyTime);
     }
@@ -123,7 +125,7 @@ contract NetBase is ERC721 {
         party.votes[_movieTitle]++;
         party.hasVoted[msg.sender] = true;
 
-        emit VoteCast(_partyId, _movieTitle, msg.sender);
+        emit VoteCasted(msg.sender, _partyId, _movieTitle);
     }
 
     function closeWatchParty(uint256 _partyId) public {
@@ -160,17 +162,6 @@ contract NetBase is ERC721 {
         require(party.partyClosed, "Party must be closed to check results");
 
         return (party.winningMovie, party.votes[party.winningMovie]);
-    }
-
-    function mintNFTForParty(address participant) public returns (uint256) {
-        return _mintNFTForParty(participant);
-    }
-
-    function _mintNFTForParty(address participant) internal returns (uint256) {
-        uint256 newTokenId = generateTokenId(participant);
-        _mint(participant, newTokenId);
-        emit NFTMinted(participant, newTokenId);
-        return newTokenId;
     }
 
     function distributeRewards(
