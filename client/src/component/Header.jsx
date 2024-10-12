@@ -61,11 +61,11 @@ const Header = () => {
                 PartyList
               </Link>
             </li>
-            <li>
+            {/* <li>
               <Link to="/my-nfts" className="hover:underline">
                 My NFTs
               </Link>
-            </li>
+            </li> */}
           </ul>
         )}
       </nav>
