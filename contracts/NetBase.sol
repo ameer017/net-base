@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 contract NetBase is ERC721 {
     address public owner;
     IERC20 public rewardToken;
+    uint256 public totalSupply;
 
     struct WatchParty {
         uint256 id;
@@ -18,6 +19,7 @@ contract NetBase is ERC721 {
         string[] movieOptions;
         mapping(address => bool) hasVoted;
         mapping(string => uint256) votes;
+        mapping(string => address[]) voters;
         string winningMovie;
     }
 
@@ -33,9 +35,8 @@ contract NetBase is ERC721 {
     }
 
     mapping(uint256 => WatchParty) private watchParties;
-    mapping(uint256 => address[]) public movieVotes;
-
     uint256[] private partyIds;
+    string private _baseTokenURI;
 
     event WatchPartyCreated(
         uint256 partyId,
@@ -43,32 +44,31 @@ contract NetBase is ERC721 {
         string title,
         uint256 time
     );
-    event VoteCast(uint256 partyId, string movieTitle, address voter);
-    event WatchPartyClosed(uint256 partyId, string winningMovie);
     event VoteCasted(address indexed voter, uint256 partyId, string movie);
+    event WatchPartyClosed(uint256 partyId, string winningMovie);
+    event NFTMinted(address indexed participant, uint256 tokenId);
+    event RewardsDistributed(
+        uint256 partyId,
+        address[] winners,
+        uint256 rewardPerParticipant
+    );
 
-    constructor(address _rewardToken) ERC721("ScrollChillNFT", "SCNFT") {
+    constructor(address _rewardToken) ERC721("NetBase", "NBT") {
         owner = msg.sender;
         rewardToken = IERC20(_rewardToken);
+        totalSupply = 0;
+    }
+
+    modifier partyClosed(uint256 _partyId) {
+        require(
+            watchParties[_partyId].partyClosed,
+            "Party must be closed to perform this action"
+        );
+        _;
     }
 
     function generatePartyId() internal view returns (uint256) {
         return partyIds.length + 1;
-    }
-
-    function generateTokenId(
-        address participant
-    ) internal view returns (uint256) {
-        return
-            uint256(
-                keccak256(
-                    abi.encodePacked(
-                        participant,
-                        block.timestamp,
-                        block.prevrandao
-                    )
-                )
-            );
     }
 
     function createWatchParty(
@@ -97,6 +97,31 @@ contract NetBase is ERC721 {
         emit WatchPartyCreated(newPartyId, msg.sender, _title, _partyTime);
     }
 
+    function getWatchParty(
+        uint256 _partyId
+    )
+        public
+        view
+        returns (WatchPartyView memory party, address[] memory voters)
+    {
+        WatchParty storage partyData = watchParties[_partyId];
+
+        require(partyData.partyClosed, "Party must be closed to check results");
+
+        party = WatchPartyView({
+            id: partyData.id,
+            title: partyData.title,
+            partyTime: partyData.partyTime,
+            host: partyData.host,
+            active: partyData.active,
+            partyClosed: partyData.partyClosed,
+            winningMovie: partyData.winningMovie,
+            movieOptions: partyData.movieOptions
+        });
+
+        voters = partyData.voters[partyData.winningMovie];
+    }
+
     function getAllParties() public view returns (WatchPartyView[] memory) {
         WatchPartyView[] memory parties = new WatchPartyView[](partyIds.length);
         for (uint256 i = 0; i < partyIds.length; i++) {
@@ -121,9 +146,11 @@ contract NetBase is ERC721 {
         require(block.timestamp < party.partyTime, "Voting period is over");
         require(party.active, "This watch party is no longer active");
         require(!party.hasVoted[msg.sender], "You have already voted");
+        require(bytes(_movieTitle).length > 0, "Invalid movie title");
 
         party.votes[_movieTitle]++;
         party.hasVoted[msg.sender] = true;
+        party.voters[_movieTitle].push(msg.sender);
 
         emit VoteCasted(msg.sender, _partyId, _movieTitle);
     }
@@ -131,7 +158,6 @@ contract NetBase is ERC721 {
     function closeWatchParty(uint256 _partyId) public {
         WatchParty storage party = watchParties[_partyId];
 
-        require(msg.sender == party.host, "Only the host can close the party");
         require(party.active, "Party is already closed");
 
         party.active = false;
@@ -154,32 +180,89 @@ contract NetBase is ERC721 {
         emit WatchPartyClosed(_partyId, winningMovie);
     }
 
-    function checkVotes(
-        uint256 _partyId
-    ) public view returns (string memory movieTitle, uint256 voteCount) {
+    function distributeRewards(uint256 _partyId) public partyClosed(_partyId) {
         WatchParty storage party = watchParties[_partyId];
 
-        require(party.partyClosed, "Party must be closed to check results");
+        address[] memory winners = party.voters[party.winningMovie];
+        uint256 rewardAmount = 5 * (10 ** 18);
 
-        return (party.winningMovie, party.votes[party.winningMovie]);
+        require(winners.length > 0, "No winners to distribute rewards");
+
+        for (uint256 i = 0; i < winners.length; i++) {
+            rewardToken.transfer(winners[i], rewardAmount);
+        }
+
+        emit RewardsDistributed(_partyId, winners, rewardAmount);
     }
 
-    function distributeRewards(
-        address _host,
-        address[] memory _participants,
-        uint256 _rewardAmount
-    ) public {
-        require(
-            _participants.length > 0,
-            "No participants to distribute rewards"
-        );
-        require(_rewardAmount > 0, "Reward amount must be greater than zero");
+    function mintNFTs(uint256 _partyId) public partyClosed(_partyId) {
+        WatchParty storage party = watchParties[_partyId];
 
-        rewardToken.transfer(_host, _rewardAmount);
-
-        uint256 rewardPerParticipant = _rewardAmount / _participants.length;
-        for (uint256 i = 0; i < _participants.length; i++) {
-            rewardToken.transfer(_participants[i], rewardPerParticipant);
+        address[] memory participants = party.voters[party.winningMovie];
+        for (uint256 i = 0; i < participants.length; i++) {
+            totalSupply++;
+            _mint(participants[i], totalSupply);
+            emit NFTMinted(participants[i], totalSupply);
         }
+    }
+
+    function getTokenOwner(uint256 _tokenId) public view returns (address) {
+        return ownerOf(_tokenId);
+    }
+
+    function setBaseURI(string memory baseURI) public {
+        require(
+            msg.sender == owner,
+            "Only the contract owner can set the base URI"
+        );
+        _baseTokenURI = baseURI;
+    }
+
+    function tokenURI(
+        uint256 tokenId
+    ) public view override returns (string memory) {
+        return string(abi.encodePacked(_baseTokenURI, uint2str(tokenId)));
+    }
+
+    function uint2str(uint256 _i) internal pure returns (string memory str) {
+        if (_i == 0) {
+            return "0";
+        }
+        uint256 j = _i;
+        uint256 len;
+        while (j != 0) {
+            len++;
+            j /= 10;
+        }
+        bytes memory bstr = new bytes(len);
+        uint256 k = len;
+        j = _i;
+        while (j != 0) {
+            bstr[--k] = bytes1(uint8(48 + (j % 10)));
+            j /= 10;
+        }
+        return string(bstr);
+    }
+
+    function checkVotes(
+        uint256 partyId
+    ) public view returns (string memory winningMovie, uint256 count) {
+        WatchParty storage party = watchParties[partyId];
+
+        require(party.partyClosed, "Party must be closed to check votes");
+
+        uint256 highestVotes = 0;
+
+        for (uint256 i = 0; i < party.movieOptions.length; i++) {
+            string memory currentMovie = party.movieOptions[i];
+            uint256 currentVotes = party.votes[currentMovie];
+
+            if (currentVotes > highestVotes) {
+                highestVotes = currentVotes;
+                winningMovie = currentMovie;
+            }
+        }
+
+        count = highestVotes;
     }
 }

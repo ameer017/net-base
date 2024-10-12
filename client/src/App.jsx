@@ -6,6 +6,7 @@ import Home from "./component/Home";
 import CreateParty from "./pages/CreateParty";
 import PartyList from "./component/PartyList";
 import PartyDetails from "./component/PartyDetails";
+import MyNFTs from "./pages/MyNFTs";
 
 const App = () => {
   return (
@@ -17,6 +18,7 @@ const App = () => {
             <Route path="/" element={<Home />} />
             <Route path="/create" element={<CreateParty />} />
             <Route path="/party-list" element={<PartyList />} />
+            <Route path="/my-nfts" element={<MyNFTs />} />
             <Route path="/party-details/:id" element={<PartyDetails />} />
           </Routes>
         </main>

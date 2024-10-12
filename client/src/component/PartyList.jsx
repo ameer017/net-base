@@ -10,12 +10,14 @@ const PartyList = () => {
 
   useEffect(() => {
     const fetchParties = async () => {
-      if (!contract) return;
+      if (!contract) return; 
 
       setLoading(true);
+      setFetchError(null);
       try {
-        const partiesList = await contract.getAllParties();
+        const partiesList = await contract.getAllParties(); 
 
+       
         const formattedParties = partiesList.map((party) => ({
           id: party.id.toNumber(),
           title: party.title,
@@ -24,14 +26,13 @@ const PartyList = () => {
           active: party.active,
           partyClosed: party.partyClosed,
           winningMovie: party.winningMovie,
-          movieOptions: party.movieOptions,
+          movieOptions: party.movieOptions || [], 
         }));
 
         setParties(formattedParties);
-        console.log(parties);
       } catch (error) {
         console.error("Error fetching watch parties:", error);
-        setFetchError("Could not fetch parties. Please try again later.");
+        setFetchError("Could not fetch parties. Please try again later."); 
       } finally {
         setLoading(false);
       }
@@ -42,7 +43,7 @@ const PartyList = () => {
 
   const formatHost = (host) => {
     if (host.length > 20) {
-      return `${host.slice(0, 6)}...${host.slice(-4)}`;
+      return `${host.slice(0, 6)}...${host.slice(-4)}`; 
     }
     return host;
   };
@@ -51,7 +52,7 @@ const PartyList = () => {
     <div className="relative">
       <div className="container mx-auto p-4">
         <h1 className="text-2xl font-bold mb-4 text-center">
-          Watch Parties Catalogue.
+          Watch Parties Catalogue
         </h1>
 
         {loading ? (
@@ -66,7 +67,7 @@ const PartyList = () => {
                 key={party.id}
                 className="block p-4 border border-gray-300 rounded-lg shadow hover:shadow-lg transition-shadow duration-200"
               >
-                <h2 className="text-lg font-semibold">{party.title}.</h2>
+                <h2 className="text-lg font-semibold">{party.title}</h2>
                 <p className="text-gray-700">Host: {formatHost(party.host)}</p>
                 <p className="text-gray-500">
                   Party Time:{" "}

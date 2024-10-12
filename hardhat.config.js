@@ -2,17 +2,21 @@ require("@nomiclabs/hardhat-ethers");
 require("dotenv").config();
 require("@nomicfoundation/hardhat-verify");
 
+const ALCHEMY_API_URL = vars.get("ALCHEMY_API_URL");
+const BASESCAN_API_KEY = vars.get("BASESCAN_API_KEY");
+const PRIVATE_KEY = vars.get("PRIVATE_KEY");
+
 module.exports = {
   solidity: "0.8.20",
   networks: {
     baseTestnet: {
-      url: process.env.ALCHEMY_API_URL,
-      accounts: [`0x${process.env.PRIVATE_KEY}`],
+      url: `https://base-sepolia.g.alchemy.com/v2/${ALCHEMY_API_URL}`,
+      accounts: [`0x${PRIVATE_KEY}`],
     },
   },
 
   etherscan: {
-    apiKey: process.env.BASESCAN_API_KEY,
+    apiKey: BASESCAN_API_KEY,
     customChains: [
       {
         network: "baseSepolia",

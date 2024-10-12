@@ -26,11 +26,19 @@ const CreateParty = () => {
       return;
     }
 
+    const movieList = movieOptions
+      .split(",")
+      .map((movie) => movie.trim())
+      .filter(Boolean);
+
+    if (movieList.length === 0) {
+      setError("Please provide at least one movie option.");
+      return;
+    }
+
     try {
       setLoading(true);
       setError("");
-
-      const movieList = movieOptions.split(",").map((movie) => movie.trim());
 
       const partyTimestamp = Math.floor(new Date(partyTime).getTime() / 1000);
 
@@ -39,28 +47,35 @@ const CreateParty = () => {
         partyTimestamp,
         movieList
       );
+
       const receipt = await tx.wait();
 
-      const createdPartyId = receipt.events[0].args[0].toNumber();
-      setPartyId(createdPartyId);
+      if (receipt.events && receipt.events.length > 0) {
+        const createdPartyId = receipt.events[0].args[0].toNumber();
+        setPartyId(createdPartyId);
 
-      console.log("Created Party Details:", {
-        title,
-        partyTime: partyTimestamp,
-        movieOptions: movieList,
-        partyId: createdPartyId,
-      });
+        console.log("Created Party Details:", {
+          title,
+          partyTime: partyTimestamp,
+          movieOptions: movieList,
+          partyId: createdPartyId,
+        });
 
-      console.log(`Party created successfully! Party ID: ${createdPartyId}`);
+        console.log(`Party created successfully! Party ID: ${createdPartyId}`);
 
-      setTitle("");
-      setPartyTime("");
-      setMovieOptions("");
+        setTitle("");
+        setPartyTime("");
+        setMovieOptions("");
 
-      navigate("/party-list");
+        navigate("/party-list");
+      } else {
+        setError("Transaction successful but no event emitted.");
+      }
     } catch (error) {
       console.error("Error creating party:", error);
-      setError("Failed to create the party. Please try again.");
+      setError(
+        error.message || "Failed to create the party. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -68,15 +83,13 @@ const CreateParty = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <h1 className="text-2xl font-bold mb-6">
-            Create a Watch Party
-      </h1>
-      
+      <h1 className="text-2xl font-bold mb-6">Create a Watch Party</h1>
+
       <form className="w-full max-w-lg" onSubmit={createParty}>
         <input
           className="w-full mb-4 p-2 border border-gray-300 rounded"
           type="text"
-          placeholder="Party Title"
+          placeholder="Watch Party Title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
@@ -108,7 +121,7 @@ const CreateParty = () => {
           {loading ? "Creating..." : "Create Party"}
         </button>
       </form>
-      {error && <p className="text-red-500 mt-4">{error}</p>}{" "}
+      {error && <p className="text-red-500 mt-4">{error}</p>}
     </div>
   );
 };
